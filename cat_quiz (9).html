@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고양이를 얼마나 알고 있나요?</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:#FAF6F0; --warm-white:#FFF9F2; --deep-brown:#2C1810;
+    --rich-brown:#5C3D2E; --terracotta:#C1602A; --amber:#E8944A;
+    --gold:#D4A853; --soft-sage:#8FA68C; --dust-pink:#E8C4B0;
+    --shadow:rgba(44,24,16,0.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--deep-brown);min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 10% 20%,rgba(212,168,83,0.10) 0%,transparent 50%),radial-gradient(ellipse at 90% 80%,rgba(193,96,42,0.08) 0%,transparent 50%);pointer-events:none;z-index:0;}
+
+  /* LANG BAR */
+  .lang-bar{width:100%;max-width:640px;display:flex;align-items:center;padding:12px 20px;position:relative;z-index:10;gap:8px;}
+  .hall-btn{padding:6px 14px;border-radius:20px;border:2px solid var(--gold);background:transparent;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--gold);cursor:pointer;letter-spacing:1px;transition:all 0.2s;margin-right:auto;}
+  .hall-btn:hover{background:var(--gold);color:#fff;}
+  .lang-btn{padding:6px 14px;border-radius:20px;border:2px solid rgba(193,96,42,0.25);background:transparent;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--rich-brown);cursor:pointer;letter-spacing:1px;transition:all 0.2s;}
+  .lang-btn.active{background:var(--terracotta);border-color:var(--terracotta);color:#fff;}
+  .lang-btn:hover:not(.active){border-color:var(--terracotta);color:var(--terracotta);}
+
+  /* CONTAINER */
+  .container{width:100%;max-width:640px;padding:0 20px 40px;position:relative;z-index:1;}
+
+  /* SCREENS */
+  .screen{display:none;animation:fadeIn 0.5s ease;}
+  .screen.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+  /* CARD */
+  .card{background:var(--warm-white);border-radius:24px;padding:36px 32px;box-shadow:0 2px 0 rgba(255,255,255,0.8) inset,0 8px 40px var(--shadow);border:1px solid rgba(212,168,83,0.2);}
+
+  /* START */
+  .title-deco{text-align:center;font-size:44px;margin-bottom:8px;}
+  .title-main{font-family:'Nanum Myeongjo',serif;font-size:24px;font-weight:800;text-align:center;line-height:1.4;color:var(--deep-brown);margin-bottom:6px;}
+  .title-sub{text-align:center;font-size:12px;color:var(--rich-brown);opacity:0.5;letter-spacing:2px;margin-bottom:24px;font-weight:300;}
+  .divider{width:48px;height:2px;background:linear-gradient(90deg,var(--gold),var(--terracotta));margin:0 auto 24px;border-radius:2px;}
+  .start-desc{text-align:center;font-size:14px;color:var(--rich-brown);line-height:1.8;margin-bottom:24px;opacity:0.85;}
+  .field-label{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--terracotta);margin-bottom:8px;text-transform:uppercase;}
+  .name-input{width:100%;padding:13px 16px;border:2px solid rgba(193,96,42,0.2);border-radius:14px;font-family:'Noto Sans KR',sans-serif;font-size:16px;color:var(--deep-brown);background:var(--cream);outline:none;margin-bottom:22px;transition:border-color 0.2s;}
+  .name-input:focus{border-color:var(--terracotta);}
+  .name-input::placeholder{color:rgba(92,61,46,0.35);}
+  .count-buttons{display:flex;gap:10px;justify-content:center;margin-bottom:24px;}
+  .count-btn{flex:1;max-width:110px;padding:14px 8px;border:2px solid rgba(212,168,83,0.3);background:transparent;border-radius:14px;font-family:'Nanum Myeongjo',serif;font-size:22px;font-weight:800;color:var(--rich-brown);cursor:pointer;transition:all 0.25s;}
+  .count-btn span{display:block;font-family:'Noto Sans KR',sans-serif;font-size:10px;font-weight:400;color:var(--rich-brown);opacity:0.6;margin-top:2px;}
+  .count-btn:hover,.count-btn.selected{border-color:var(--terracotta);background:rgba(193,96,42,0.07);color:var(--terracotta);transform:translateY(-2px);box-shadow:0 6px 18px rgba(193,96,42,0.15);}
+  .count-btn.selected span{color:var(--terracotta);opacity:0.8;}
+  .start-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--terracotta),var(--amber));color:white;border:none;border-radius:14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all 0.25s;box-shadow:0 4px 18px rgba(193,96,42,0.35);}
+  .start-btn:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(193,96,42,0.45);}
+  .start-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+
+  /* QUIZ */
+  .quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .quiz-progress-text{font-size:12px;font-weight:700;letter-spacing:2px;color:var(--terracotta);}
+  .quiz-score-text{font-size:12px;color:var(--rich-brown);opacity:0.6;}
+  .progress-bar{width:100%;height:4px;background:rgba(193,96,42,0.12);border-radius:2px;margin-bottom:20px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--terracotta),var(--amber));border-radius:2px;transition:width 0.5s ease;}
+  .cat-image-wrap{width:100%;border-radius:16px;overflow:hidden;margin-bottom:18px;background:var(--dust-pink);position:relative;box-shadow:0 4px 18px var(--shadow);min-height:120px;}
+  .cat-image-wrap img{width:100%;height:auto;max-height:420px;object-fit:contain;display:block;transition:opacity 0.4s;background:var(--dust-pink);}
+  .cat-image-wrap .img-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:44px;animation:pulse 1.2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:0.4;transform:scale(0.95);}50%{opacity:1;transform:scale(1.05);}}
+  .type-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 10px;border-radius:20px;margin-bottom:8px;text-transform:uppercase;}
+  .type-badge.origin{background:rgba(143,166,140,0.15);color:var(--soft-sage);border:1px solid rgba(143,166,140,0.3);}
+  .type-badge.breed{background:rgba(212,168,83,0.15);color:var(--gold);border:1px solid rgba(212,168,83,0.3);}
+  .question-text{font-family:'Nanum Myeongjo',serif;font-size:19px;font-weight:700;color:var(--deep-brown);line-height:1.4;margin-bottom:18px;}
+  .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px;}
+  .option-btn{padding:14px 10px;border:2px solid rgba(92,61,46,0.14);background:transparent;border-radius:12px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--rich-brown);cursor:pointer;transition:all 0.2s;text-align:center;line-height:1.3;}
+  .option-btn:hover:not(:disabled){border-color:var(--amber);background:rgba(232,148,74,0.06);transform:translateY(-1px);}
+  .option-btn.selected{border-color:var(--terracotta);background:rgba(193,96,42,0.08);color:var(--terracotta);font-weight:700;}
+  .option-btn.correct{border-color:var(--soft-sage);background:rgba(143,166,140,0.15);color:#4a7a47;font-weight:700;}
+  .option-btn.wrong{border-color:#d44;background:rgba(221,68,68,0.08);color:#c33;font-weight:700;}
+  .option-btn:disabled{cursor:default;}
+  .check-btn{width:100%;padding:15px;background:var(--deep-brown);color:var(--cream);border:none;border-radius:12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all 0.2s;margin-bottom:12px;}
+  .check-btn:hover:not(:disabled){background:var(--rich-brown);transform:translateY(-1px);}
+  .check-btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
+  .feedback-box{display:none;border-radius:14px;padding:16px;animation:slideUp 0.3s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .feedback-box.correct-fb{background:rgba(143,166,140,0.12);border:1px solid rgba(143,166,140,0.35);}
+  .feedback-box.wrong-fb{background:rgba(221,68,68,0.06);border:1px solid rgba(221,68,68,0.2);}
+  .feedback-result{font-size:15px;font-weight:700;margin-bottom:7px;}
+  .feedback-box.correct-fb .feedback-result{color:#4a7a47;}
+  .feedback-box.wrong-fb  .feedback-result{color:#c33;}
+  .feedback-explanation{font-size:12px;color:var(--rich-brown);line-height:1.7;opacity:0.85;}
+  .next-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--terracotta),var(--amber));color:white;border:none;border-radius:12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px;margin-top:12px;display:none;transition:all 0.2s;box-shadow:0 4px 14px rgba(193,96,42,0.3);}
+  .next-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(193,96,42,0.4);}
+
+  /* RESULT */
+  .result-emoji{text-align:center;font-size:52px;margin-bottom:10px;}
+  .result-title{font-family:'Nanum Myeongjo',serif;font-size:22px;font-weight:800;text-align:center;color:var(--deep-brown);margin-bottom:5px;}
+  .result-subtitle{text-align:center;font-size:11px;color:var(--rich-brown);opacity:0.5;letter-spacing:1px;margin-bottom:20px;}
+  .score-circle{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--terracotta),var(--amber));margin:0 auto 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(193,96,42,0.35);}
+  .score-number{font-family:'Nanum Myeongjo',serif;font-size:38px;font-weight:800;color:white;line-height:1;}
+  .score-total{font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px;}
+  .result-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+  .stat-box{background:rgba(92,61,46,0.05);border-radius:12px;padding:14px;text-align:center;border:1px solid rgba(92,61,46,0.08);}
+  .stat-value{font-family:'Nanum Myeongjo',serif;font-size:24px;font-weight:700;color:var(--terracotta);}
+  .stat-label{font-size:11px;color:var(--rich-brown);opacity:0.6;margin-top:3px;letter-spacing:1px;}
+  .result-message{text-align:center;font-size:13px;line-height:1.8;color:var(--rich-brown);opacity:0.8;margin-bottom:18px;font-style:italic;}
+
+  /* TOP10 */
+  .section-title{font-size:12px;font-weight:700;letter-spacing:2px;color:var(--gold);margin-bottom:10px;text-align:center;text-transform:uppercase;}
+  .top10-list{margin-bottom:20px;}
+  .rank-row{display:flex;align-items:center;padding:9px 12px;border-radius:10px;margin-bottom:5px;background:rgba(92,61,46,0.04);border:1px solid rgba(92,61,46,0.07);}
+  .rank-row.me{background:rgba(193,96,42,0.08);border-color:rgba(193,96,42,0.25);}
+  .rank-num{font-family:'Nanum Myeongjo',serif;font-size:15px;font-weight:700;width:30px;color:var(--rich-brown);}
+  .rank-num.gold{color:#D4A853;} .rank-num.silver{color:#9E9E9E;} .rank-num.bronze{color:#A0522D;}
+  .rank-name{flex:1;font-size:13px;color:var(--deep-brown);}
+  .rank-score{font-size:13px;font-weight:700;color:var(--terracotta);}
+
+  .retry-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--terracotta),var(--amber));color:white;border:none;border-radius:14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all 0.25s;box-shadow:0 4px 18px rgba(193,96,42,0.35);}
+  .retry-btn:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(193,96,42,0.45);}
+
+  /* HALL OF FAME */
+  .hof-title-deco{text-align:center;font-size:38px;margin-bottom:8px;}
+  .hof-main-title{font-family:'Nanum Myeongjo',serif;font-size:22px;font-weight:800;text-align:center;color:var(--deep-brown);margin-bottom:4px;}
+  .hof-sub{text-align:center;font-size:11px;color:var(--rich-brown);opacity:0.5;letter-spacing:2px;margin-bottom:24px;}
+  .hof-table{width:100%;border-collapse:collapse;margin-bottom:24px;}
+  .hof-table th{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--terracotta);text-align:left;padding:9px 12px;border-bottom:2px solid rgba(193,96,42,0.2);text-transform:uppercase;}
+  .hof-table th:last-child{text-align:right;}
+  .hof-table td{padding:11px 12px;font-size:13px;color:var(--deep-brown);border-bottom:1px solid rgba(92,61,46,0.07);}
+  .hof-table td:last-child{text-align:right;font-weight:700;color:var(--terracotta);}
+  .hof-table tr:hover td{background:rgba(193,96,42,0.04);}
+  .hof-rank-cell{font-family:'Nanum Myeongjo',serif;font-size:16px;font-weight:700;width:40px;}
+  .hof-back-btn{width:100%;padding:15px;background:var(--deep-brown);color:var(--cream);border:none;border-radius:12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all 0.2s;}
+  .hof-back-btn:hover{background:var(--rich-brown);transform:translateY(-1px);}
+  .hof-loading{text-align:center;padding:36px;font-size:30px;animation:pulse 1.2s infinite;}
+  .hof-empty{text-align:center;padding:36px;color:var(--rich-brown);opacity:0.5;font-size:13px;line-height:1.8;}
+
+  .footer-note{text-align:center;font-size:11px;color:var(--rich-brown);opacity:0.4;margin-top:18px;letter-spacing:1px;}
+
+  /* SAVING */
+  .saving-overlay{display:none;position:fixed;inset:0;background:rgba(44,24,16,0.5);z-index:100;align-items:center;justify-content:center;}
+  .saving-overlay.show{display:flex;}
+  .saving-box{background:var(--warm-white);border-radius:18px;padding:28px 36px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.3);}
+  .saving-spin{font-size:36px;animation:spin 1s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .saving-box p{font-size:15px;font-weight:700;color:var(--deep-brown);margin-top:10px;}
+</style>
+</head>
+<body>
+
+<!-- LANG BAR -->
+<div class="lang-bar">
+  <button class="hall-btn" id="hall-btn" onclick="showHallOfFame()">🏆 명예의 전당</button>
+  <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">한국어</button>
+  <button class="lang-btn" id="btn-en" onclick="setLang('en')">English</button>
+</div>
+
+<div class="container">
+
+  <!-- START -->
+  <div class="screen active" id="screen-start">
+    <div class="card">
+      <div class="title-deco">🐱</div>
+      <h1 class="title-main" id="title-main">고양이를 얼마나<br>알고 있나요?</h1>
+      <p class="title-sub">CAT KNOWLEDGE QUIZ</p>
+      <div class="divider"></div>
+      <p class="start-desc" id="start-desc">고양이의 <strong>고향</strong>과 <strong>품종</strong>을 맞혀보세요.<br>사진을 보고 정답을 골라주세요! 🐾</p>
+      <p class="field-label" id="label-name">참여자 이름</p>
+      <input class="name-input" id="name-input" type="text" placeholder="이름을 입력하세요" oninput="onNameInput()">
+      <p class="field-label" id="label-count">문제 수 선택</p>
+      <div class="count-buttons">
+        <button class="count-btn" onclick="selectCount(10,this)">10<span id="qs-label-0">문제</span></button>
+        <button class="count-btn" onclick="selectCount(20,this)">20<span id="qs-label-1">문제</span></button>
+        <button class="count-btn" onclick="selectCount(30,this)">30<span id="qs-label-2">문제</span></button>
+      </div>
+      <button class="start-btn" id="start-btn" onclick="startQuiz()" disabled>퀴즈 시작하기 →</button>
+    </div>
+    <p class="footer-note" id="footer-note">🐾 고양이 사진은 The Cat API에서 제공됩니다</p>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="screen-quiz">
+    <div class="card">
+      <div class="quiz-header">
+        <span class="quiz-progress-text" id="progress-text">1 / 10</span>
+        <span class="quiz-score-text" id="score-text">점수: 0</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="cat-image-wrap">
+        <div class="img-loading" id="img-loading">🐱</div>
+        <img id="cat-img" src="" alt="Cat" style="opacity:0" onload="onImageLoad()">
+      </div>
+      <span class="type-badge" id="type-badge"></span>
+      <p class="question-text" id="question-text"></p>
+      <div class="options-grid" id="options-grid"></div>
+      <button class="check-btn" id="check-btn" onclick="checkAnswer()" disabled>정답 확인</button>
+      <div class="feedback-box" id="feedback-box">
+        <p class="feedback-result" id="feedback-result"></p>
+        <p class="feedback-explanation" id="feedback-explanation"></p>
+      </div>
+      <button class="next-btn" id="next-btn" onclick="nextQuestion()">다음 문제 →</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="card">
+      <div class="result-emoji" id="result-emoji">🏆</div>
+      <h2 class="result-title" id="result-title">퀴즈 완료!</h2>
+      <p class="result-subtitle" id="result-subtitle">QUIZ COMPLETE</p>
+      <div class="divider"></div>
+      <div class="score-circle">
+        <div class="score-number" id="final-score">0</div>
+        <div class="score-total" id="final-total">/ 10 점</div>
+      </div>
+      <div class="result-stats">
+        <div class="stat-box"><div class="stat-value" id="stat-correct">0</div><div class="stat-label" id="label-correct">정답</div></div>
+        <div class="stat-box"><div class="stat-value" id="stat-wrong">0</div><div class="stat-label" id="label-wrong">오답</div></div>
+      </div>
+      <p class="result-message" id="result-message"></p>
+      <p class="section-title" id="top10-title">🏅 TOP 10 랭킹</p>
+      <div class="top10-list" id="top10-list"><div class="hof-loading">🐱</div></div>
+      <button class="retry-btn" id="retry-btn" onclick="resetQuiz()">다시 도전하기 🐾</button>
+    </div>
+    <p class="footer-note">🐾 <span id="footer-note2">고양이 사진은 The Cat API에서 제공됩니다</span></p>
+  </div>
+
+  <!-- HALL OF FAME -->
+  <div class="screen" id="screen-hof">
+    <div class="card">
+      <div class="hof-title-deco">🏆</div>
+      <h2 class="hof-main-title" id="hof-main-title">명예의 전당</h2>
+      <p class="hof-sub" id="hof-sub">TOP 20 랭킹</p>
+      <div class="divider"></div>
+      <div id="hof-content"><div class="hof-loading">🐱</div></div>
+      <button class="hof-back-btn" id="hof-back-btn" onclick="goBack()">← 돌아가기</button>
+      <button class="retry-btn" id="hof-restart-btn" onclick="resetQuiz()" style="margin-top:10px;">처음으로 🐾</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="saving-overlay" id="saving-overlay">
+  <div class="saving-box">
+    <div class="saving-spin">🐾</div>
+    <p id="saving-text">점수 저장 중...</p>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyAJFodCtd0nZ9R3FIjKN0FSsBvFZkYVcqo",
+  authDomain:"cat-quiz-ece53.firebaseapp.com",
+  projectId:"cat-quiz-ece53",
+  storageBucket:"cat-quiz-ece53.firebasestorage.app",
+  messagingSenderId:"306933977395",
+  appId:"1:306933977395:web:bd9d55fc46d0091d95ae46"
+});
+const db = getFirestore(app);
+
+// ── DATA ──────────────────────────────────────────────────────────
+const COUNTRIES_KO=['이집트','터키','영국','미국','러시아','일본','태국','이란','노르웨이','스코틀랜드','호주','캐나다','프랑스','독일','싱가포르','말레이시아','이탈리아','스페인','중국','인도','스웨덴','소말리아','에티오피아','미얀마','네덜란드','키프로스','그리스'];
+const COUNTRIES_EN=['Egypt','Turkey','United Kingdom','United States','Russia','Japan','Thailand','Iran','Norway','Scotland','Australia','Canada','France','Germany','Singapore','Malaysia','Italy','Spain','China','India','Sweden','Somalia','Ethiopia','Myanmar','Netherlands','Cyprus','Greece'];
+const BREEDS_KO=['페르시안','메인쿤','시암','뱅갈','러시안블루','스코티시폴드','버먼','아비시니안','노르웨이숲','랙돌','스핑크스','브리티시숏헤어','오리엔탈숏헤어','버미즈','소말리','이집션마우','샤르트뢰','통키니즈','데본렉스','싱가푸라','오시캣','아메리칸숏헤어','먼치킨','봄베이','네벨룽','사바나','라펌','카오마니','코랏','터키시밴','엑조틱숏헤어','재패니즈밥테일','스노우슈','시베리안'];
+const BREEDS_EN=['Persian','Maine Coon','Siamese','Bengal','Russian Blue','Scottish Fold','Birman','Abyssinian','Norwegian Forest Cat','Ragdoll','Sphynx','British Shorthair','Oriental Shorthair','Burmese','Somali','Egyptian Mau','Chartreux','Tonkinese','Devon Rex','Singapura','Ocicat','American Shorthair','Munchkin','Bombay','Nebelung','Savannah','LaPerm','Khao Manee','Korat','Turkish Van','Exotic Shorthair','Japanese Bobtail','Snowshoe','Siberian'];
+
+const BREEDS=[
+  {id:'abys',nko:'아비시니안',nen:'Abyssinian',oko:'에티오피아',oen:'Ethiopia',
+   dko:'에티오피아에서 기원한 고대 품종으로, 활동적이고 호기심이 많으며 사람을 잘 따릅니다.',
+   den:'An ancient breed from Ethiopia; active, curious, and strongly bonded to their owners.',
+   d2ko:'독특한 틱드 무늬 털이 특징이며, 아프리카 야생 고양이를 닮은 외모를 가집니다.',
+   d2en:'Known for their unique ticked coat pattern, resembling the African wildcat.'},
+  {id:'aege',nko:'이지안',nen:'Aegean',oko:'그리스',oen:'Greece',
+   dko:'그리스 에게해 섬에서 자연적으로 발생한 품종으로 수천 년의 역사를 가집니다.',
+   den:'A naturally occurring breed from the Greek Aegean islands with thousands of years of history.',
+   d2ko:'어부들의 동반자로 유명하며, 활발하고 영리한 성격을 지닙니다.',
+   d2en:'Famous as fishermen\'s companions, lively and highly intelligent.'},
+  {id:'asho',nko:'아메리칸숏헤어',nen:'American Shorthair',oko:'미국',oen:'United States',
+   dko:'미국을 대표하는 토종 품종으로 유럽 정착민들이 데려온 고양이에서 유래했습니다.',
+   den:'A native American breed descended from cats brought over by European settlers.',
+   d2ko:'건강하고 균형 잡힌 체형, 다양한 색상과 온화한 성격이 특징입니다.',
+   d2en:'Healthy, well-balanced build with a variety of colors and a gentle temperament.'},
+  {id:'beng',nko:'뱅갈',nen:'Bengal',oko:'미국',oen:'United States',
+   dko:'아시아표범고양이와 가정고양이를 교배해 만들어진 품종으로 야생적인 외모가 특징입니다.',
+   den:'Created by crossing the Asian leopard cat with domestic cats, known for their wild appearance.',
+   d2ko:'표범 무늬 털과 근육질 체형을 가지고 있으며, 매우 활동적이고 지능이 높습니다.',
+   d2en:'Leopard-like markings and a muscular build; highly active and intelligent.'},
+  {id:'birm',nko:'버먼',nen:'Birman',oko:'미얀마',oen:'Myanmar',
+   dko:'미얀마의 신성한 사원 고양이로 알려진 품종으로, 부드러운 긴 털이 특징입니다.',
+   den:'Known as the sacred temple cat of Myanmar, featuring a soft and long coat.',
+   d2ko:'발 끝이 흰색인 것이 특징이며, 온순하고 조용한 성격으로 사랑받습니다.',
+   d2en:'Distinguished by white-tipped paws; beloved for their gentle and quiet nature.'},
+  {id:'bomb',nko:'봄베이',nen:'Bombay',oko:'미국',oen:'United States',
+   dko:'검은 표범을 닮도록 브리딩된 미국산 품종으로 짧고 광택 있는 검은 털이 특징입니다.',
+   den:'An American breed developed to resemble a black panther, with short, glossy black fur.',
+   d2ko:'미국 켄터키주에서 버미즈와 아메리칸숏헤어를 교배해 만들어졌습니다.',
+   d2en:'Created in Kentucky by crossing Burmese and American Shorthair cats.'},
+  {id:'bslo',nko:'브리티시롱헤어',nen:'British Longhair',oko:'영국',oen:'United Kingdom',
+   dko:'브리티시숏헤어에서 파생된 품종으로 풍성하고 부드러운 긴 털이 특징입니다.',
+   den:'Derived from the British Shorthair, featuring a lush and soft long coat.',
+   d2ko:'침착하고 독립적인 성격을 가진 영국을 대표하는 품종 중 하나입니다.',
+   d2en:'One of Britain\'s representative breeds, calm and independent in personality.'},
+  {id:'bsho',nko:'브리티시숏헤어',nen:'British Shorthair',oko:'영국',oen:'United Kingdom',
+   dko:'영국에서 가장 오래된 품종 중 하나로 짧고 촘촘한 털과 둥근 얼굴이 특징입니다.',
+   den:'One of Britain\'s oldest breeds, known for a short dense coat and round face.',
+   d2ko:'독립적이지만 가족을 사랑하는 성격으로 영국에서 가장 인기 있는 품종입니다.',
+   d2en:'Independent yet family-loving; the most popular breed in Britain.'},
+  {id:'bure',nko:'버미즈',nen:'Burmese',oko:'미얀마',oen:'Myanmar',
+   dko:'미얀마 사원의 신성한 고양이에서 유래한 품종으로 근육질 체형이 특징입니다.',
+   den:'Descended from sacred temple cats of Myanmar, notable for their muscular build.',
+   d2ko:'비단같이 부드러운 단모와 사람을 매우 좋아하는 사교적인 성격을 가집니다.',
+   d2en:'Silky smooth short coat and an extremely social, people-loving personality.'},
+  {id:'char',nko:'샤르트뢰',nen:'Chartreux',oko:'프랑스',oen:'France',
+   dko:'프랑스의 자연 발생 품종으로 프랑스 수도원에서 수도사들이 길렀다고 전해집니다.',
+   den:'A naturally occurring French breed said to have been raised by monks in monasteries.',
+   d2ko:'청회색 털과 주황색 눈이 특징이며, 조용하고 온화한 성격으로 유명합니다.',
+   d2en:'Blue-grey fur and orange eyes; renowned for a quiet, gentle character.'},
+  {id:'drex',nko:'데본렉스',nen:'Devon Rex',oko:'영국',oen:'United Kingdom',
+   dko:'영국 데본 지방에서 발견된 돌연변이 품종으로 곱슬거리는 짧은 털이 특징입니다.',
+   den:'A mutant breed discovered in Devon, England, featuring a short, curly coat.',
+   d2ko:'"외계인 고양이"라 불리는 독특한 외모와 매우 사교적인 성격으로 인기가 높습니다.',
+   d2en:'Called the "alien cat" for their unique look; extremely sociable and popular.'},
+  {id:'ebur',nko:'이집션마우',nen:'Egyptian Mau',oko:'이집트',oen:'Egypt',
+   dko:'고대 이집트 벽화에도 등장하는 유구한 역사를 가진 자연 품종입니다.',
+   den:'A natural breed with a long history, depicted in ancient Egyptian murals.',
+   d2ko:'자연적으로 발생한 반점 무늬를 가진 유일한 가정고양이로 매우 빠르게 달릴 수 있습니다.',
+   d2en:'The only domestic cat with naturally occurring spots; capable of impressive speeds.'},
+  {id:'esho',nko:'엑조틱숏헤어',nen:'Exotic Shorthair',oko:'미국',oen:'United States',
+   dko:'페르시안의 짧은 털 버전으로 미국에서 개량된 품종입니다.',
+   den:'Developed in the US as a short-haired version of the Persian.',
+   d2ko:'납작한 얼굴과 통통한 체형이 특징이며 페르시안보다 손질이 쉬워 인기가 높습니다.',
+   d2en:'Flat face and stocky body; more popular than Persian due to easier grooming.'},
+  {id:'jbob',nko:'재패니즈밥테일',nen:'Japanese Bobtail',oko:'일본',oen:'Japan',
+   dko:'일본에서 수백 년의 역사를 가진 품종으로 짧고 토끼 꼬리 같은 독특한 꼬리가 특징입니다.',
+   den:'A breed with centuries of history in Japan, known for its short, pom-pom-like tail.',
+   d2ko:'일본에서 행운을 부르는 고양이로 여겨지며 삼색 무늬가 가장 인기 있습니다.',
+   d2en:'Considered lucky in Japan; the tricolor pattern is the most prized.'},
+  {id:'khao',nko:'카오마니',nen:'Khao Manee',oko:'태국',oen:'Thailand',
+   dko:'태국 왕실에서 수세기 동안 사랑받은 신성한 품종으로 순백의 털과 보석 같은 눈이 특징입니다.',
+   den:'A sacred breed cherished by Thai royalty for centuries, with pure white fur and jewel-like eyes.',
+   d2ko:'"다이아몬드 눈 고양이"로 불리며 오드아이 개체가 매우 귀하게 여겨집니다.',
+   d2en:'Called the "Diamond Eye Cat"; odd-eyed individuals (each eye a different color) are highly prized.'},
+  {id:'kora',nko:'코랏',nen:'Korat',oko:'태국',oen:'Thailand',
+   dko:'태국 코랏 지방에서 유래한 고대 품종으로 행운을 부르는 고양이로 사랑받습니다.',
+   den:'An ancient breed from Korat, Thailand, beloved as a good-luck cat.',
+   d2ko:'은빛 청회색 털과 맑은 초록 눈이 특징이며 조용하고 온화한 성격을 지닙니다.',
+   d2en:'Silver-blue fur and clear green eyes; quiet and gentle in temperament.'},
+  {id:'lape',nko:'라펌',nen:'LaPerm',oko:'미국',oen:'United States',
+   dko:'미국 오레곤주에서 돌연변이로 탄생한 품종으로 곱슬거리는 털이 트레이드마크입니다.',
+   den:'A mutant breed born in Oregon, USA, with curly fur as their trademark.',
+   d2ko:'매우 애정이 많고 호기심이 강하며, 털의 곱슬 정도는 개체마다 다양합니다.',
+   d2en:'Very affectionate and curious; the degree of curliness varies among individuals.'},
+  {id:'maine',nko:'메인쿤',nen:'Maine Coon',oko:'미국',oen:'United States',
+   dko:'미국 메인 주 원산의 대형 품종으로 개 같은 성격과 풍성한 털이 특징입니다.',
+   den:'A large breed native to Maine, USA, known for a dog-like personality and luxurious coat.',
+   d2ko:'고양이 중 가장 큰 품종 중 하나로 털이 물에 강하고 추운 기후에 잘 적응합니다.',
+   d2en:'One of the largest domestic breeds; water-resistant coat adapts well to cold climates.'},
+  {id:'manx',nko:'맹크스',nen:'Manx',oko:'영국',oen:'United Kingdom',
+   dko:'영국 맨 섬에서 자연 돌연변이로 탄생한 품종으로 꼬리가 없거나 매우 짧은 것이 특징입니다.',
+   den:'Born from a natural mutation on the Isle of Man; tailless or with a very short tail.',
+   d2ko:'둥글고 통통한 체형과 뒷다리가 앞다리보다 길어 토끼처럼 뛰는 독특한 모습을 보입니다.',
+   d2en:'Round, stocky build with longer hind legs, giving it a rabbit-like hop.'},
+  {id:'munc',nko:'먼치킨',nen:'Munchkin',oko:'미국',oen:'United States',
+   dko:'미국에서 자연 돌연변이로 탄생한 품종으로 짧은 다리가 트레이드마크입니다.',
+   den:'A natural mutant breed from the US, with short legs as their trademark.',
+   d2ko:'짧은 다리에도 불구하고 활발하고 빠르며 장난기가 넘치고 사람을 좋아합니다.',
+   d2en:'Despite short legs, active and fast; playful and very fond of people.'},
+  {id:'nebe',nko:'네벨룽',nen:'Nebelung',oko:'미국',oen:'United States',
+   dko:'러시안블루의 장모 버전으로 미국에서 개량된 품종입니다.',
+   den:'Developed in the US as a long-haired version of the Russian Blue.',
+   d2ko:'부드럽고 실크같은 청회색 털이 아름다우며 조용하고 얌전한 성격을 가집니다.',
+   d2en:'Beautiful silky blue-grey fur; quiet and reserved personality.'},
+  {id:'norw',nko:'노르웨이숲',nen:'Norwegian Forest Cat',oko:'노르웨이',oen:'Norway',
+   dko:'노르웨이의 울창한 숲에서 수천 년을 살아온 자연 품종으로 두꺼운 이중털이 특징입니다.',
+   den:'A natural breed from Norway\'s dense forests for thousands of years, with a thick double coat.',
+   d2ko:'바이킹과 함께 항해한 고양이의 후손으로 알려지며 추운 기후에 완벽하게 적응합니다.',
+   d2en:'Said to descend from cats that sailed with Vikings; perfectly adapted to cold climates.'},
+  {id:'ocic',nko:'오시캣',nen:'Ocicat',oko:'미국',oen:'United States',
+   dko:'미국에서 의도적으로 오셀롯을 닮도록 개량된 품종으로 표범 무늬 반점이 특징입니다.',
+   den:'Intentionally bred in the US to resemble an ocelot, featuring spotted leopard-like markings.',
+   d2ko:'아비시니안, 시암, 아메리칸숏헤어를 교배해 만들어진 순수 가정고양이 품종입니다.',
+   d2en:'A purely domestic breed created from Abyssinian, Siamese, and American Shorthair.'},
+  {id:'orie',nko:'오리엔탈숏헤어',nen:'Oriental Shorthair',oko:'영국',oen:'United Kingdom',
+   dko:'시암을 기반으로 영국에서 다양한 색상과 패턴으로 개량된 품종입니다.',
+   den:'Developed in the UK from Siamese cats in a wide variety of colors and patterns.',
+   d2ko:'시암과 비슷한 가늘고 우아한 체형을 가지고 있으며 수다스럽고 애정 넘치는 성격입니다.',
+   d2en:'Shares the Siamese\'s slender build; talkative and affectionate.'},
+  {id:'pers',nko:'페르시안',nen:'Persian',oko:'이란',oen:'Iran',
+   dko:'이란(옛 페르시아)에서 기원한 품종으로 풍성하고 긴 털과 납작한 얼굴이 특징입니다.',
+   den:'Originating from Iran (ancient Persia), known for a lush long coat and flat face.',
+   d2ko:'조용하고 온화하며 실내 생활을 즐기는 세계에서 가장 인기 있는 품종 중 하나입니다.',
+   d2en:'Quiet and gentle, preferring indoor life; one of the world\'s most popular breeds.'},
+  {id:'raga',nko:'랙돌',nen:'Ragdoll',oko:'미국',oen:'United States',
+   dko:'미국 캘리포니아주에서 1960년대에 개발된 대형 품종입니다.',
+   den:'A large breed developed in California in the 1960s.',
+   d2ko:'안겨 있을 때 근육이 이완되어 인형처럼 늘어지는 특성 때문에 "랙돌"이라는 이름이 붙었습니다.',
+   d2en:'Named "Ragdoll" because their muscles go limp when held, like a floppy cloth doll.'},
+  {id:'rblu',nko:'러시안블루',nen:'Russian Blue',oko:'러시아',oen:'Russia',
+   dko:'러시아 아르한겔스크 항구 도시에서 유래했으며 특유의 청회색 털이 특징입니다.',
+   den:'Originating from the port city of Arkhangelsk, Russia, known for their blue-grey coat.',
+   d2ko:'이중털로 촘촘하게 자라 은빛으로 빛나며 조용하고 수줍음이 많지만 가족에게는 충성스럽습니다.',
+   d2en:'Dense double coat shimmers silver; quiet and shy but loyal to family.'},
+  {id:'sava',nko:'사바나',nen:'Savannah',oko:'미국',oen:'United States',
+   dko:'아프리카 서발 고양이와 가정고양이를 교배해 만든 대형 혼종 품종입니다.',
+   den:'A large hybrid breed created by crossing the African serval with domestic cats.',
+   d2ko:'긴 다리와 날씬한 체형, 표범 무늬가 특징이며 개처럼 산책을 즐기는 습성을 가집니다.',
+   d2en:'Long legs, slender build, and leopard spots; uniquely enjoys walks like a dog.'},
+  {id:'sfol',nko:'스코티시폴드',nen:'Scottish Fold',oko:'스코틀랜드',oen:'Scotland',
+   dko:'스코틀랜드 퍼스셔 지방에서 1961년 돌연변이로 탄생한 품종입니다.',
+   den:'Born from a mutation in Perthshire, Scotland in 1961.',
+   d2ko:'앞으로 접힌 독특한 귀 모양이 트레이드마크이며 둥글고 올빼미 같은 얼굴이 매력적입니다.',
+   d2en:'Forward-folded ears and a round owl-like face are their unmistakable trademarks.'},
+  {id:'siam',nko:'시암',nen:'Siamese',oko:'태국',oen:'Thailand',
+   dko:'태국(옛 시암 왕국)의 왕실 고양이로 수천 년의 역사를 자랑하는 고대 품종입니다.',
+   den:'The royal cat of Thailand (ancient Siam), with thousands of years of history.',
+   d2ko:'파란 눈과 포인트 컬러(얼굴·귀·발·꼬리가 진하고 몸통은 밝은 색) 털이 특징입니다.',
+   d2en:'Known for blue eyes and point coloration — darker on the face, ears, paws, and tail.'},
+  {id:'sibe',nko:'시베리안',nen:'Siberian',oko:'러시아',oen:'Russia',
+   dko:'러시아 시베리아 지역에서 수백 년을 살아온 자연 품종으로 러시아의 국가 고양이입니다.',
+   den:'A natural breed from Siberia, Russia, recognized as Russia\'s national cat.',
+   d2ko:'두껍고 풍성한 삼중털로 혹독한 추위를 이겨내며 개같이 충성스럽고 활발한 성격을 지닙니다.',
+   d2en:'Triple coat withstands harsh winters; dog-like loyalty and energetic personality.'},
+  {id:'sing',nko:'싱가푸라',nen:'Singapura',oko:'싱가포르',oen:'Singapore',
+   dko:'싱가포르 하수구에서 발견된 품종으로 세계에서 가장 작은 고양이 품종 중 하나입니다.',
+   den:'Found in Singapore\'s drains; one of the world\'s smallest domestic cat breeds.',
+   d2ko:'"드레인 캣"이라는 별명을 가지며 아이보리빛 털에 갈색 틱드 무늬가 특징입니다.',
+   d2en:'Nicknamed the "Drain Cat"; ivory coat with brown ticked markings.'},
+  {id:'snow',nko:'스노우슈',nen:'Snowshoe',oko:'미국',oen:'United States',
+   dko:'미국에서 시암과 아메리칸숏헤어를 교배해 만든 품종으로 흰색 발이 특징입니다.',
+   den:'Bred in the US from Siamese and American Shorthair; white paws are their signature.',
+   d2ko:'눈을 신은 듯한 흰 발과 파란 눈이 트레이드마크이며 사교적이고 활발한 성격을 지닙니다.',
+   d2en:'Snow-white paws and blue eyes are trademarks; sociable and lively.'},
+  {id:'soma',nko:'소말리',nen:'Somali',oko:'소말리아',oen:'Somalia',
+   dko:'아비시니안의 장모 버전으로 소말리아와 에티오피아 근방에서 유래했습니다.',
+   den:'The long-haired version of the Abyssinian, originating near Somalia and Ethiopia.',
+   d2ko:'여우를 닮은 부드러운 긴 털과 큰 귀가 특징이며 아비시니안처럼 활발하고 호기심이 많습니다.',
+   d2en:'Fox-like with a soft long coat and large ears; active and curious like the Abyssinian.'},
+  {id:'sphy',nko:'스핑크스',nen:'Sphynx',oko:'캐나다',oen:'Canada',
+   dko:'캐나다 온타리오에서 1966년 자연 돌연변이로 탄생한 무모(털 없는) 품종입니다.',
+   den:'A hairless breed born from a natural mutation in Ontario, Canada in 1966.',
+   d2ko:'털이 없어 체온 유지를 위해 항상 따뜻함을 찾으며 사교적이고 에너지가 넘칩니다.',
+   d2en:'Seeks warmth constantly to maintain body temperature; sociable and energetic.'},
+  {id:'tang',nko:'통키니즈',nen:'Tonkinese',oko:'캐나다',oen:'Canada',
+   dko:'캐나다에서 시암과 버미즈를 교배해 만든 품종으로 두 품종의 장점을 합쳤습니다.',
+   den:'Bred in Canada from Siamese and Burmese cats, combining the best of both breeds.',
+   d2ko:'민크 패턴의 부드러운 털과 청록색 눈이 특징이며 매우 사교적입니다.',
+   d2en:'Mink-pattern coat and aqua eyes; extremely sociable and friendly.'},
+  {id:'tvan',nko:'터키시밴',nen:'Turkish Van',oko:'터키',oen:'Turkey',
+   dko:'터키 반 호수 지역에서 유래한 품종으로 "수영하는 고양이"로 유명합니다.',
+   den:'Originating from the Lake Van region of Turkey, famous as the "Swimming Cat".',
+   d2ko:'흰 몸에 머리와 꼬리에만 색이 있는 "밴 패턴"이 특징이며 물을 매우 좋아합니다.',
+   d2en:'White body with color only on head and tail — the "Van pattern"; loves water.'}
+];
+
+// ── STATE ─────────────────────────────────────────────────────────
+let lang='ko', totalCount=0, questions=[], current=0, score=0, answered=false, playerName='', prevScreen='screen-start';
+
+// ── LANG ──────────────────────────────────────────────────────────
+function t(ko,en){return lang==='ko'?ko:en;}
+
+window.setLang=function(l){
+  lang=l;
+  document.getElementById('btn-ko').classList.toggle('active',l==='ko');
+  document.getElementById('btn-en').classList.toggle('active',l==='en');
+  document.getElementById('hall-btn').textContent=t('🏆 명예의 전당','🏆 Hall of Fame');
+  document.getElementById('title-main').innerHTML=t('고양이를 얼마나<br>알고 있나요?','How Well Do You<br>Know Cats?');
+  document.getElementById('start-desc').innerHTML=t('고양이의 <strong>고향</strong>과 <strong>품종</strong>을 맞혀보세요.<br>사진을 보고 정답을 골라주세요! 🐾','Guess the <strong>origin</strong> and <strong>breed</strong> of each cat.<br>Look at the photo and pick the right answer! 🐾');
+  document.getElementById('label-name').textContent=t('참여자 이름','Your Name');
+  document.getElementById('name-input').placeholder=t('이름을 입력하세요','Enter your name');
+  document.getElementById('label-count').textContent=t('문제 수 선택','Select Questions');
+  ['qs-label-0','qs-label-1','qs-label-2'].forEach(id=>document.getElementById(id).textContent=t('문제','Qs'));
+  document.getElementById('start-btn').textContent=t('퀴즈 시작하기 →','Start Quiz →');
+  document.getElementById('footer-note').textContent=t('🐾 고양이 사진은 The Cat API에서 제공됩니다','🐾 Cat photos provided by The Cat API');
+  document.getElementById('footer-note2').textContent=t('고양이 사진은 The Cat API에서 제공됩니다','Cat photos provided by The Cat API');
+  document.getElementById('label-correct').textContent=t('정답','Correct');
+  document.getElementById('label-wrong').textContent=t('오답','Wrong');
+  document.getElementById('top10-title').textContent=t('🏅 TOP 10 랭킹','🏅 TOP 10 RANKING');
+  document.getElementById('retry-btn').textContent=t('다시 도전하기 🐾','Try Again 🐾');
+  document.getElementById('hof-main-title').textContent=t('명예의 전당','Hall of Fame');
+  document.getElementById('hof-sub').textContent=t('TOP 20 랭킹','TOP 20 RANKING');
+  document.getElementById('hof-back-btn').textContent=t('← 돌아가기','← Go Back');
+  document.getElementById('hof-restart-btn').textContent=t('처음으로 🐾','Restart 🐾');
+  document.getElementById('saving-text').textContent=t('점수 저장 중...','Saving score...');
+  // 결과 화면이 열려 있으면 전체 다시 렌더링
+  if(document.getElementById('screen-result').classList.contains('active')&&questions.length){
+    refreshResultLang();
+  }
+  if(document.getElementById('screen-quiz').classList.contains('active')&&questions.length){
+    renderQ();
+    if(answered) refreshFeedbackLang();
+  }
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────
+
+// 결과 화면 언어 실시간 전환
+function refreshResultLang(){
+  const pct=score/totalCount;
+  let tko,ten,mko,men;
+  if(pct>=0.9){tko='고양이 박사!';ten='Cat Expert!';mko='"고양이에 대한 지식이 정말 놀랍네요! 혹시 고양이와 함께 살고 계신가요? 🐾"';men='"Your knowledge of cats is truly impressive! Do you live with cats? 🐾"';}
+  else if(pct>=0.7){tko='고양이 집사!';ten='Cat Lover!';mko='"꽤 훌륭한 점수예요! 고양이를 많이 좋아하시는 게 느껴집니다. 🐱"';men='"Great score! It\'s clear you really love cats. 🐱"';}
+  else if(pct>=0.5){tko='고양이 친구!';ten='Cat Friend!';mko='"반반이네요! 조금 더 공부하면 고양이 박사가 될 수 있을 거예요. 📚"';men='"Not bad! A little more study and you\'ll be a cat expert. 📚"';}
+  else{tko='고양이가 낯설군요!';ten='Still Learning!';mko='"괜찮아요! 다시 도전하면서 고양이를 더 알아가 봐요. 🐾"';men='"That\'s OK! Try again and get to know cats better. 🐾"';}
+  document.getElementById('result-title').textContent=t(tko,ten);
+  document.getElementById('result-message').textContent=t(mko,men);
+  document.getElementById('final-total').textContent=t(`/ ${totalCount} 점`,`/ ${totalCount} pts`);
+  document.getElementById('label-correct').textContent=t('정답','Correct');
+  document.getElementById('label-wrong').textContent=t('오답','Wrong');
+  document.getElementById('top10-title').textContent=t('🏅 TOP 10 랭킹','🏅 TOP 10 RANKING');
+  document.getElementById('retry-btn').textContent=t('다시 도전하기 🐾','Try Again 🐾');
+  document.querySelectorAll('.rank-row').forEach(row=>{
+    const nameEl=row.querySelector('.rank-name');
+    const scoreEl=row.querySelector('.rank-score');
+    if(nameEl){
+      nameEl.textContent=nameEl.textContent.replace(' (나)','').replace(' (Me)','');
+      if(row.classList.contains('me')) nameEl.textContent+=t(' (나)',' (Me)');
+    }
+    if(scoreEl){const num=parseInt(scoreEl.textContent);if(!isNaN(num))scoreEl.textContent=`${num}${t('점','pts')}`;}
+  });
+  const emptyEl=document.querySelector('#top10-list .hof-empty');
+  if(emptyEl) emptyEl.textContent=t('아직 기록이 없어요 🐾','No records yet 🐾');
+}
+
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pickRandom(arr,n,exc){return shuffle(arr.filter(x=>x!==exc)).slice(0,n);}
+
+function buildQuestions(n){
+  const pool=shuffle(BREEDS); const qs=[];
+  for(let i=0;i<n;i++){
+    const b=pool[i%pool.length]; const type=Math.random()<0.2?'origin':'breed';
+    if(type==='origin'){
+      const wKo=pickRandom(COUNTRIES_KO,3,b.oko);
+      const wEn=COUNTRIES_EN.filter(x=>x!==b.oen); shuffle(wEn);
+      const idx=shuffle([0,1,2,3]);
+      const oKo=[b.oko,...wKo]; const oEn=[b.oen,...wEn.slice(0,3)];
+      qs.push({type:'origin',b,aKo:b.oko,aEn:b.oen,oKo:idx.map(i=>oKo[i]),oEn:idx.map(i=>oEn[i]),exKo:b.dko,exEn:b.den});
+    } else {
+      const wKo=pickRandom(BREEDS_KO,3,b.nko);
+      const wEn=BREEDS_EN.filter(x=>x!==b.nen); shuffle(wEn);
+      const idx=shuffle([0,1,2,3]);
+      const oKo=[b.nko,...wKo]; const oEn=[b.nen,...wEn.slice(0,3)];
+      qs.push({type:'breed',b,aKo:b.nko,aEn:b.nen,oKo:idx.map(i=>oKo[i]),oEn:idx.map(i=>oEn[i]),exKo:b.d2ko||b.dko,exEn:b.d2en||b.den});
+    }
+  }
+  return qs;
+}
+
+// ── START ─────────────────────────────────────────────────────────
+window.onNameInput=function(){playerName=document.getElementById('name-input').value.trim();updateStartBtn();};
+window.selectCount=function(n,btn){totalCount=n;document.querySelectorAll('.count-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');updateStartBtn();};
+function updateStartBtn(){document.getElementById('start-btn').disabled=!(playerName&&totalCount);}
+window.startQuiz=function(){questions=buildQuestions(totalCount);current=0;score=0;stopBgm();showScreen('screen-quiz');loadQ();};
+
+function showScreen(id){
+  prevScreen=document.querySelector('.screen.active')?.id||'screen-start';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────────
+function loadQ(){
+  answered=false;
+  const q=questions[current];
+  document.getElementById('progress-text').textContent=`${current+1} / ${totalCount}`;
+  document.getElementById('progress-fill').style.width=`${(current/totalCount)*100}%`;
+  renderQ();
+  const img=document.getElementById('cat-img'),loading=document.getElementById('img-loading');
+  img.style.opacity='0';loading.style.display='flex';
+  document.querySelector('.cat-image-wrap').style.minHeight='220px';
+  fetch(`https://api.thecatapi.com/v1/images/search?breed_ids=${q.b.id}&limit=1`)
+    .then(r=>r.json()).then(d=>{img.src=(d&&d[0]&&d[0].url)?d[0].url:'https://cataas.com/cat';})
+    .catch(()=>{img.src='https://cataas.com/cat';});
+  const grid=document.getElementById('options-grid');grid.innerHTML='';
+  const opts=lang==='ko'?q.oKo:q.oEn;
+  opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');btn.className='option-btn';btn.textContent=opt;btn.dataset.index=i;btn.onclick=()=>selectOpt(btn);grid.appendChild(btn);
+  });
+  document.getElementById('check-btn').disabled=true;
+  document.getElementById('check-btn').textContent=t('정답 확인','Check Answer');
+  document.getElementById('feedback-box').style.display='none';
+  document.getElementById('next-btn').style.display='none';
+}
+
+function renderQ(){
+  const q=questions[current];
+  const badge=document.getElementById('type-badge');
+  badge.className=`type-badge ${q.type}`;
+  badge.textContent=q.type==='origin'?t('🌍 고향 맞추기','🌍 Origin Quiz'):t('🐱 품종 맞추기','🐱 Breed Quiz');
+  document.getElementById('question-text').textContent=q.type==='origin'?t('이 고양이의 고향은 어디일까요?','Where is this cat originally from?'):t('이 고양이의 종은 무엇일까요?','What breed is this cat?');
+  document.getElementById('score-text').textContent=t(`점수: ${score}`,`Score: ${score}`);
+  document.getElementById('check-btn').textContent=t('정답 확인','Check Answer');
+  // 정답 제출 전: 선택지 버튼 텍스트 전환
+  if(!answered){
+    const opts=lang==='ko'?q.oKo:q.oEn;
+    document.querySelectorAll('.option-btn').forEach((btn,i)=>{
+      if(opts[i]!==undefined) btn.textContent=opts[i];
+    });
+  }
+}
+
+window.onImageLoad=function(){
+  document.getElementById('img-loading').style.display='none';
+  document.getElementById('cat-img').style.opacity='1';
+  document.querySelector('.cat-image-wrap').style.minHeight='0';
+};
+
+function selectOpt(btn){if(answered)return;document.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');document.getElementById('check-btn').disabled=false;}
+
+let lastAnswerOk=false; // 마지막 정답 여부 저장
+
+// ── SOUND & BGM ────────────────────────────────────────────────────
+let audioCtx=null;
+let bgmNodes=[];   // 현재 재생 중인 BGM 노드들
+let bgmRunning=false;
+
+function getAudioCtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// iOS: 첫 터치 시 AudioContext 미리 활성화
+document.addEventListener('touchstart',function initAudio(){
+  getAudioCtx();
+  document.removeEventListener('touchstart',initAudio);
+},{once:true});
+
+// ── 효과음 ──────────────────────────────────────────────────────
+// 정답: 귀여운 상승 팡파레 3음
+function playCorrectSound(){
+  try{
+    const ctx=getAudioCtx(); const t0=ctx.currentTime;
+    [[523,0],[659,0.13],[784,0.26],[1047,0.40]].forEach(([freq,delay])=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type='sine';
+      o.frequency.setValueAtTime(freq,t0+delay);
+      g.gain.setValueAtTime(0,t0+delay);
+      g.gain.linearRampToValueAtTime(0.18,t0+delay+0.04);
+      g.gain.exponentialRampToValueAtTime(0.001,t0+delay+0.22);
+      o.start(t0+delay); o.stop(t0+delay+0.23);
+    });
+  }catch(e){}
+}
+
+// 오답: 귀여운 하강 2음 (뚝뚝)
+function playWrongSound(){
+  try{
+    const ctx=getAudioCtx(); const t0=ctx.currentTime;
+    [[330,0],[262,0.18]].forEach(([freq,delay])=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type='sine';
+      o.frequency.setValueAtTime(freq,t0+delay);
+      o.frequency.linearRampToValueAtTime(freq*0.85,t0+delay+0.15);
+      g.gain.setValueAtTime(0,t0+delay);
+      g.gain.linearRampToValueAtTime(0.16,t0+delay+0.03);
+      g.gain.exponentialRampToValueAtTime(0.001,t0+delay+0.18);
+      o.start(t0+delay); o.stop(t0+delay+0.19);
+    });
+  }catch(e){}
+}
+
+// ── BGM ──────────────────────────────────────────────────────────
+function stopBgm(){
+  bgmRunning=false;
+  bgmNodes.forEach(n=>{try{n.stop();}catch(e){}});
+  bgmNodes=[];
+}
+
+// 귀여운 왈츠풍 BGM (시작화면 & 결과화면)
+function playStartBgm(){
+  stopBgm(); bgmRunning=true;
+  try{
+    const ctx=getAudioCtx();
+    // 음표: [주파수, 시작시간, 길이]
+    const melody=[
+      [523,0,0.28],[659,0.33,0.28],[784,0.66,0.28],[880,1.0,0.42],
+      [784,1.5,0.20],[659,1.75,0.20],[784,2.0,0.55],
+      [698,2.66,0.28],[784,3.0,0.28],[880,3.33,0.28],[1047,3.66,0.42],
+      [880,4.16,0.20],[784,4.41,0.20],[880,4.66,0.55],
+      [784,5.33,0.20],[698,5.55,0.20],[659,5.77,0.20],[523,6.0,0.55],
+      [659,6.66,0.20],[523,6.88,0.20],[440,7.10,0.20],[523,7.33,0.55],
+    ];
+    const bass=[
+      [262,0,0.22],[196,0.33,0.22],[196,0.66,0.22],
+      [262,1.0,0.22],[196,1.5,0.22],[196,2.0,0.22],
+      [349,2.66,0.22],[262,3.0,0.22],[262,3.33,0.22],
+      [349,3.66,0.22],[262,4.16,0.22],[262,4.66,0.22],
+      [392,5.33,0.22],[294,5.77,0.22],[262,6.0,0.22],
+      [330,6.66,0.22],[262,7.10,0.22],[262,7.33,0.22],
+    ];
+    const loopLen=8.0;
+
+    function scheduleBgm(startOffset){
+      if(!bgmRunning)return;
+      const t0=ctx.currentTime+0.05;
+      [...melody].forEach(([freq,when,dur])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);
+        o.type='triangle';
+        o.frequency.setValueAtTime(freq,t0+when);
+        g.gain.setValueAtTime(0,t0+when);
+        g.gain.linearRampToValueAtTime(0.09,t0+when+0.03);
+        g.gain.exponentialRampToValueAtTime(0.001,t0+when+dur);
+        o.start(t0+when);o.stop(t0+when+dur+0.01);
+        bgmNodes.push(o);
+      });
+      [...bass].forEach(([freq,when,dur])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);
+        o.type='sine';
+        o.frequency.setValueAtTime(freq,t0+when);
+        g.gain.setValueAtTime(0,t0+when);
+        g.gain.linearRampToValueAtTime(0.06,t0+when+0.04);
+        g.gain.exponentialRampToValueAtTime(0.001,t0+when+dur);
+        o.start(t0+when);o.stop(t0+when+dur+0.01);
+        bgmNodes.push(o);
+      });
+      setTimeout(()=>{ if(bgmRunning) scheduleBgm(startOffset+loopLen); }, (loopLen-0.3)*1000);
+    }
+    scheduleBgm(0);
+  }catch(e){}
+}
+
+// 명예의 전당 BGM — 밝고 경쾌한 팡파레풍
+function playHofBgm(){
+  stopBgm(); bgmRunning=true;
+  try{
+    const ctx=getAudioCtx();
+    const melody=[
+      [784,0,0.20],[880,0.22,0.20],[1047,0.44,0.33],
+      [880,0.80,0.16],[784,0.98,0.16],[880,1.16,0.44],
+      [784,1.66,0.20],[698,1.88,0.20],[784,2.10,0.20],[880,2.33,0.44],
+      [659,2.83,0.20],[784,3.05,0.20],[698,3.27,0.20],[659,3.50,0.55],
+      [523,4.10,0.20],[659,4.32,0.20],[784,4.54,0.33],
+      [698,4.90,0.16],[784,5.08,0.16],[880,5.26,0.44],
+      [1047,5.76,0.28],[880,6.06,0.20],[784,6.28,0.20],[880,6.50,0.55],
+    ];
+    const loopLen=7.2;
+    function scheduleBgm(){
+      if(!bgmRunning)return;
+      const t0=ctx.currentTime+0.05;
+      melody.forEach(([freq,when,dur])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);
+        o.type='triangle';
+        o.frequency.setValueAtTime(freq,t0+when);
+        g.gain.setValueAtTime(0,t0+when);
+        g.gain.linearRampToValueAtTime(0.10,t0+when+0.03);
+        g.gain.exponentialRampToValueAtTime(0.001,t0+when+dur);
+        o.start(t0+when);o.stop(t0+when+dur+0.01);
+        bgmNodes.push(o);
+      });
+      setTimeout(()=>{ if(bgmRunning) scheduleBgm(); },(loopLen-0.3)*1000);
+    }
+    scheduleBgm();
+  }catch(e){}
+}
+
+function refreshFeedbackLang(){
+  if(!answered)return;
+  const q=questions[current];
+  // 4개 선택지 텍스트 전환
+  const opts=lang==='ko'?q.oKo:q.oEn;
+  document.querySelectorAll('.option-btn').forEach((btn,i)=>{
+    btn.textContent=opts[i];
+  });
+  document.getElementById('check-btn').textContent=t('정답 확인','Check Answer');
+  document.getElementById('feedback-result').textContent=lastAnswerOk
+    ?t('✅ 정답! 맞았습니다!','✅ Correct! Well done!')
+    :t(`❌ 오답! 정답은 "${q.aKo}" 입니다.`,`❌ Wrong! The answer is "${q.aEn}".`);
+  document.getElementById('feedback-explanation').textContent=`📖 ${lang==='ko'?q.exKo:q.exEn}`;
+  document.getElementById('next-btn').textContent=t('다음 문제 →','Next Question →');
+  document.getElementById('score-text').textContent=t(`점수: ${score}`,`Score: ${score}`);
+}
+
+window.checkAnswer=function(){
+  if(answered)return;answered=true;
+  const q=questions[current];
+  const sel=document.querySelector('.option-btn.selected');
+  const idx=sel?parseInt(sel.dataset.index):-1;
+  const ok=idx>=0&&q.oKo[idx]===q.aKo;
+  lastAnswerOk=ok;
+  if(ok){score++;playCorrectSound();}else{playWrongSound();}
+  document.querySelectorAll('.option-btn').forEach((btn,i)=>{
+    btn.disabled=true;
+    if(q.oKo[i]===q.aKo)btn.classList.add('correct');
+    else if(i===idx&&!ok)btn.classList.add('wrong');
+  });
+  const fb=document.getElementById('feedback-box');fb.style.display='block';fb.className=`feedback-box ${ok?'correct-fb':'wrong-fb'}`;
+  refreshFeedbackLang();
+  document.getElementById('check-btn').disabled=true;
+  if(current<totalCount-1){document.getElementById('next-btn').style.display='block';}
+  else{setTimeout(()=>saveAndShowResult(),600);}
+};
+
+window.nextQuestion=function(){current++;loadQ();};
+
+// ── FIREBASE SAVE & RESULT ─────────────────────────────────────────
+async function saveAndShowResult(){
+  document.getElementById('saving-text').textContent=t('점수 저장 중...','Saving score...');
+  document.getElementById('saving-overlay').classList.add('show');
+  try{await addDoc(collection(db,'scores'),{name:playerName,score,total:totalCount,timestamp:serverTimestamp()});}
+  catch(e){console.error(e);}
+  document.getElementById('saving-overlay').classList.remove('show');
+  await showResult();
+}
+
+async function showResult(){
+  showScreen('screen-result');
+  playStartBgm();
+  const pct=score/totalCount;
+  let emoji,tko,ten,mko,men;
+  if(pct>=0.9){emoji='🏆';tko='고양이 박사!';ten='Cat Expert!';mko='"고양이에 대한 지식이 정말 놀랍네요! 혹시 고양이와 함께 살고 계신가요? 🐾"';men='"Your knowledge of cats is truly impressive! Do you live with cats? 🐾"';}
+  else if(pct>=0.7){emoji='😸';tko='고양이 집사!';ten='Cat Lover!';mko='"꽤 훌륭한 점수예요! 고양이를 많이 좋아하시는 게 느껴집니다. 🐱"';men='"Great score! It\'s clear you really love cats. 🐱"';}
+  else if(pct>=0.5){emoji='🐱';tko='고양이 친구!';ten='Cat Friend!';mko='"반반이네요! 조금 더 공부하면 고양이 박사가 될 수 있을 거예요. 📚"';men='"Not bad! A little more study and you\'ll be a cat expert. 📚"';}
+  else{emoji='😿';tko='고양이가 낯설군요!';ten='Still Learning!';mko='"괜찮아요! 다시 도전하면서 고양이를 더 알아가 봐요. 🐾"';men='"That\'s OK! Try again and get to know cats better. 🐾"';}
+
+  document.getElementById('result-emoji').textContent=emoji;
+  document.getElementById('result-title').textContent=t(tko,ten);
+  document.getElementById('result-subtitle').textContent='QUIZ COMPLETE';
+  document.getElementById('final-score').textContent=score;
+  document.getElementById('final-total').textContent=t(`/ ${totalCount} 점`,`/ ${totalCount} pts`);
+  document.getElementById('stat-correct').textContent=score;
+  document.getElementById('stat-wrong').textContent=totalCount-score;
+  document.getElementById('result-message').textContent=t(mko,men);
+
+  // TOP 10
+  const list=document.getElementById('top10-list');list.innerHTML='<div class="hof-loading">🐱</div>';
+  try{
+    const q2=query(collection(db,'scores'),orderBy('score','desc'),limit(10));
+    const snap=await getDocs(q2);
+    const rows=[];snap.forEach(doc=>rows.push(doc.data()));
+    if(!rows.length){list.innerHTML=`<div class="hof-empty">${t('아직 기록이 없어요 🐾','No records yet 🐾')}</div>`;return;}
+    list.innerHTML='';
+    const medals=['🥇','🥈','🥉'];
+    rows.forEach((r,i)=>{
+      const isMe=r.name===playerName&&r.score===score;
+      const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+      const div=document.createElement('div');div.className=`rank-row${isMe?' me':''}`;
+      div.innerHTML=`<span class="rank-num ${rc}">${i<3?medals[i]:i+1}</span><span class="rank-name">${r.name}${isMe?t(' (나)',' (Me)'):''}</span><span class="rank-score">${r.score}${t('점','pts')}</span>`;
+      list.appendChild(div);
+    });
+  }catch(e){list.innerHTML=`<div class="hof-empty">${t('랭킹을 불러올 수 없어요','Could not load ranking')}</div>`;}
+}
+
+// ── HALL OF FAME ───────────────────────────────────────────────────
+window.showHallOfFame=async function(){
+  prevScreen=document.querySelector('.screen.active')?.id||'screen-start';
+  showScreen('screen-hof');
+  playHofBgm();
+  setLang(lang);
+  const content=document.getElementById('hof-content');content.innerHTML='<div class="hof-loading">🐱</div>';
+  try{
+    const q2=query(collection(db,'scores'),orderBy('score','desc'),limit(20));
+    const snap=await getDocs(q2);
+    const rows=[];snap.forEach(doc=>rows.push(doc.data()));
+    if(!rows.length){content.innerHTML=`<div class="hof-empty">${t('아직 기록이 없어요.<br>퀴즈를 완료하면 이름이 올라와요! 🐾','No records yet.<br>Complete a quiz to appear here! 🐾')}</div>`;return;}
+    const medals=['🥇','🥈','🥉'];
+    let html=`<table class="hof-table"><thead><tr><th>${t('순위','Rank')}</th><th>${t('이름','Name')}</th><th>${t('점수','Score')}</th></tr></thead><tbody>`;
+    rows.forEach((r,i)=>{
+      html+=`<tr><td class="hof-rank-cell">${i<3?medals[i]:i+1}</td><td>${r.name}</td><td>${r.score}${t('점','pts')}</td></tr>`;
+    });
+    html+='</tbody></table>';content.innerHTML=html;
+  }catch(e){content.innerHTML=`<div class="hof-empty">${t('데이터를 불러올 수 없어요','Could not load data')}</div>`;}
+};
+
+window.goBack=function(){
+  stopBgm();
+  const target=prevScreen;
+  showScreen(target);
+  if(target==='screen-result') playStartBgm();
+};
+
+window.resetQuiz=function(){
+  stopBgm();
+  totalCount=0;questions=[];current=0;score=0;
+  document.querySelectorAll('.count-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('start-btn').disabled=true;
+  showScreen('screen-start');
+  setLang(lang);
+  playStartBgm();
+};
+
+// init
+setLang('ko');
+// 시작화면 BGM은 첫 터치 후 시작 (iOS 정책)
+document.addEventListener('touchstart',function startBgmOnTouch(){
+  playStartBgm();
+  document.removeEventListener('touchstart',startBgmOnTouch);
+},{once:true});
+// PC는 클릭으로
+document.addEventListener('click',function startBgmOnClick(){
+  playStartBgm();
+  document.removeEventListener('click',startBgmOnClick);
+},{once:true});
+</script>
+</body>
+</html>
